@@ -155,8 +155,6 @@ export function sanitizeFilename(name: string): string {
 // --------------------------------------------------------------------------
 
 export async function searchYoutube(query: string): Promise<YoutubeSearchResult[]> {
-    console.log("hohohoho");
-    
   const raw = await runAuto([
     `ytsearch8:${query}`,
     '--dump-json',

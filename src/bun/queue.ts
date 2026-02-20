@@ -1,12 +1,5 @@
 /**
  * Download queue manager.
- *
- * Items are added regardless of USB state. When `processQueue()` is called
- * (either explicitly or automatically when USB connects) it drains the queue
- * sequentially, downloading each pending item to the USB.
- *
- * Progress and status changes are emitted via callbacks so the main process
- * can push them to the renderer.
  */
 
 import { randomUUID } from 'crypto';
@@ -14,31 +7,21 @@ import type { QueueItem, QueueStatus } from '../shared/types';
 import { downloadToUsb } from './ytdlp';
 import { addToBackup } from './backup';
 
-// --------------------------------------------------------------------------
-// Callbacks (set by main.ts so it can push to the renderer)
-// --------------------------------------------------------------------------
-
-type QueueListener = (items: QueueItem[]) => void;
+type QueueListener    = (items: QueueItem[]) => void;
 type ProgressListener = (id: string, progress: number, status: QueueStatus, error?: string) => void;
 
-let onQueueChange: QueueListener = () => {};
-let onProgress: ProgressListener = () => {};
+let onQueueChange: QueueListener    = () => {};
+let onProgress:    ProgressListener = () => {};
 
 export function setQueueListeners(q: QueueListener, p: ProgressListener): void {
   onQueueChange = q;
-  onProgress = p;
+  onProgress    = p;
 }
-
-// --------------------------------------------------------------------------
-// In-memory queue state
-// --------------------------------------------------------------------------
 
 const queue: QueueItem[] = [];
 let isProcessing = false;
 
-function notify(): void {
-  onQueueChange([...queue]);
-}
+function notify(): void { onQueueChange([...queue]); }
 
 function updateItem(id: string, patch: Partial<QueueItem>): void {
   const item = queue.find(i => i.id === id);
@@ -47,24 +30,11 @@ function updateItem(id: string, patch: Partial<QueueItem>): void {
   notify();
 }
 
-// --------------------------------------------------------------------------
-// Public API
-// --------------------------------------------------------------------------
-
-export function getQueue(): QueueItem[] {
-  return [...queue];
-}
+export function getQueue(): QueueItem[] { return [...queue]; }
 
 export function addToQueue(params: { url: string; title: string; thumbnail?: string }): string {
   const id = randomUUID();
-  queue.push({
-    id,
-    youtubeUrl: params.url,
-    title: params.title,
-    thumbnail: params.thumbnail,
-    status: 'pending',
-    progress: 0,
-  });
+  queue.push({ id, youtubeUrl: params.url, title: params.title, thumbnail: params.thumbnail, status: 'pending', progress: 0 });
   notify();
   return id;
 }
@@ -72,18 +42,15 @@ export function addToQueue(params: { url: string; title: string; thumbnail?: str
 export function cancelQueueItem(id: string): void {
   const item = queue.find(i => i.id === id);
   if (!item) return;
-
-  if (item.status === 'pending') {
-    item.status = 'cancelled';
-    notify();
-  } else if (item.status === 'downloading') {
-    // The abort signal is stored on the item while downloading
+  if (item.status === 'pending') { item.status = 'cancelled'; notify(); }
+  else if (item.status === 'downloading') {
     (item as QueueItem & { _abort?: AbortController })._abort?.abort();
     item.status = 'cancelled';
     notify();
   }
 }
 
+// Fix #2: remove a finished/cancelled/error item from the queue
 export function removeQueueItem(id: string): void {
   const idx = queue.findIndex(i => i.id === id);
   if (idx === -1) return;
@@ -95,11 +62,6 @@ export function removeQueueItem(id: string): void {
   }
 }
 
-/**
- * Begin processing all pending items in the queue.
- * Downloads go sequentially to avoid overwhelming the connection.
- * Returns immediately; work happens in the background.
- */
 export function processQueue(usbPath: string): void {
   if (isProcessing) return;
   _runQueue(usbPath);
@@ -114,35 +76,27 @@ async function _runQueue(usbPath: string): Promise<void> {
 
       const controller = new AbortController();
       (next as QueueItem & { _abort?: AbortController })._abort = controller;
-
       updateItem(next.id, { status: 'downloading', progress: 0 });
       onProgress(next.id, 0, 'downloading');
 
       try {
         await downloadToUsb({
-          youtubeUrl: next.youtubeUrl,
-          outputDir: usbPath,
-          title: next.title,
+          youtubeUrl: next.youtubeUrl, outputDir: usbPath, title: next.title,
           signal: controller.signal,
-          onProgress: (pct) => {
-            updateItem(next.id, { progress: pct });
-            onProgress(next.id, pct, 'downloading');
-          },
+          onProgress: (pct) => { updateItem(next.id, { progress: pct }); onProgress(next.id, pct, 'downloading'); },
         });
 
         if (!controller.signal.aborted) {
-          // Save to permanent backup
-          addToBackup({
-            title: next.title,
-            youtubeUrl: next.youtubeUrl,
-            filename: next.title + '.mp3',
-          });
-
-          // Remove completed item from queue
-          const idx = queue.findIndex(i => i.id === next.id);
-          if (idx !== -1) queue.splice(idx, 1);
+          addToBackup({ title: next.title, youtubeUrl: next.youtubeUrl, filename: next.title + '.mp3' });
+          // Mark complete then remove
+          updateItem(next.id, { status: 'complete', progress: 100 });
           onProgress(next.id, 100, 'complete');
-          notify();
+          // Auto-remove completed items after a short grace period so the
+          // user can see the "complete" flash, then the item disappears.
+          setTimeout(() => {
+            const idx = queue.findIndex(i => i.id === next.id);
+            if (idx !== -1 && queue[idx].status === 'complete') { queue.splice(idx, 1); notify(); }
+          }, 3000);
         }
       } catch (err) {
         if (!controller.signal.aborted) {

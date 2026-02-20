@@ -59,6 +59,9 @@ export interface UsbStatus {
 export interface AppSettings {
   ytdlpVersion: string;
   theme: 'dark' | 'light';
+  // Port of the local Bun file-server used for audio playback.
+  // Avoids transferring large base64 blobs through RPC.
+  fileServerPort: number;
 }
 
 // --------------------------------------------------------------------------
@@ -71,7 +74,6 @@ export type AppRPC = {
       // USB
       getUsbStatus:           { params: Record<string, never>; response: UsbStatus };
       deleteSong:             { params: { path: string }; response: { success: boolean; error?: string } };
-      getSongFileUrl:         { params: { path: string }; response: { url: string; error?: string } };
       // YouTube
       searchYoutube:          { params: { query: string }; response: YoutubeSearchResult[] };
       getYoutubePreviewUrl:   { params: { youtubeUrl: string }; response: { url: string; error?: string } };
@@ -85,7 +87,7 @@ export type AppRPC = {
       getBackupList:          { params: Record<string, never>; response: BackupSong[] };
       removeFromBackup:       { params: { id: string }; response: { success: boolean } };
       redownloadFromBackup:   { params: { id: string }; response: { id: string } };
-      // Settings
+      // Settings — now includes fileServerPort; ytdlpVersion served from cache
       getSettings:            { params: Record<string, never>; response: AppSettings };
       updateYtdlp:            { params: Record<string, never>; response: { success: boolean; version?: string; error?: string } };
       setTheme:               { params: { theme: 'dark' | 'light' }; response: Record<string, never> };
@@ -103,6 +105,7 @@ export type AppRPC = {
       usbStatusChanged: { status: UsbStatus };
       downloadProgress: { id: string; progress: number; status: QueueStatus; error?: string };
       updateAvailable:  { version: string };
+      ytdlpVersionReady: { version: string };  // pushed once version is fetched at startup
     };
   }>;
 };
