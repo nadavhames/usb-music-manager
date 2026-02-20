@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>USB Music Manager</title>
+  <link rel="stylesheet" href="views://mainview/index.css" />
+</head>
+<body>
+  <div class="update-banner" id="update-banner" style="display:none">
+    <span id="update-banner-text">🚀 A new version is available!</span>
+    <button class="btn btn-primary btn-sm" id="update-install-btn">Update &amp; Restart</button>
+    <button class="btn btn-ghost btn-sm" id="update-dismiss-btn">Later</button>
+  </div>
+
+  <div id="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="app-icon">🎵</span>
+        <span class="app-name">USB Music</span>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="library">
+          <span class="nav-icon">💿</span>
+          <span>Library</span>
+        </button>
+        <button class="nav-item" data-view="search">
+          <span class="nav-icon">🔍</span>
+          <span>Search</span>
+        </button>
+        <button class="nav-item" data-view="queue">
+          <span class="nav-icon">⬇</span>
+          <span>Queue</span>
+          <span class="badge" id="queue-badge" style="display:none">0</span>
+        </button>
+        <button class="nav-item" data-view="backup">
+          <span class="nav-icon">🗂</span>
+          <span>Backup</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon">⚙</span>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="usb-status-bar" id="usb-status-bar">
+        <div class="usb-indicator" id="usb-indicator"></div>
+        <div class="usb-info" id="usb-info">Scanning…</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <!-- Library View -->
+      <section class="view active" id="view-library">
+        <header class="view-header">
+          <h1>Library</h1>
+          <div class="usb-space-card" id="space-card" style="display:none">
+            <div class="space-bar-wrap"><div class="space-bar" id="space-bar"></div></div>
+            <div class="space-labels">
+              <span id="space-free">–</span>
+              <span id="space-fits">Fits ~<b id="space-fits-count">–</b> songs</span>
+            </div>
+          </div>
+        </header>
+        <!-- Fix #5: min-height:0 on list so flex overflow works -->
+        <div class="song-list" id="song-list">
+          <div class="empty-state">
+            <div class="empty-icon">🔌</div>
+            <p>Connect your USB device to see songs.</p>
+          </div>
+        </div>
+        <!-- Fix #6: playback bar uses style not hidden attr; always in flow -->
+        <div class="playback-bar" id="playback-bar" style="display:none">
+          <audio id="audio-player" controls></audio>
+          <div class="now-playing">
+            <span class="now-playing-label">Now playing:</span>
+            <span id="now-playing-title">–</span>
+          </div>
+          <button class="btn-icon" id="stop-playback" title="Stop">⏹</button>
+        </div>
+      </section>
+
+      <!-- Search View -->
+      <section class="view" id="view-search">
+        <header class="view-header">
+          <h1>YouTube Search</h1>
+          <form class="search-form" id="search-form">
+            <input class="search-input" id="search-input" type="text" placeholder="Search YouTube…" autocomplete="off" />
+            <button class="btn btn-primary" type="submit">Search</button>
+          </form>
+        </header>
+        <!-- Fix #8: recent searches -->
+        <div class="search-history" id="search-history" style="display:none">
+          <span class="search-history-label">Recent:</span>
+          <div class="search-history-chips" id="search-history-chips"></div>
+        </div>
+        <div class="search-results" id="search-results">
+          <div class="empty-state">
+            <div class="empty-icon">🎧</div>
+            <p>Search for songs to preview and download.</p>
+          </div>
+        </div>
+        <!-- Preview player -->
+        <div class="playback-bar" id="preview-bar" style="display:none">
+          <audio id="preview-player" controls autoplay></audio>
+          <div class="now-playing">
+            <span class="now-playing-label">Previewing:</span>
+            <span id="preview-title">–</span>
+          </div>
+          <button class="btn-icon" id="stop-preview" title="Stop">⏹</button>
+        </div>
+      </section>
+
+      <!-- Queue View -->
+      <section class="view" id="view-queue">
+        <header class="view-header">
+          <h1>Download Queue</h1>
+          <div id="usb-full-warning" class="warning-banner" style="display:none">
+            ⚠ USB is full — queued tracks will download once you free up space.
+          </div>
+          <button class="btn btn-primary" id="process-queue-btn">▶ Download to USB</button>
+        </header>
+        <div class="queue-list" id="queue-list">
+          <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <p>Queue is empty. Search for songs to add.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Backup View -->
+      <section class="view" id="view-backup">
+        <header class="view-header">
+          <h1>Song Backup</h1>
+          <p class="view-subtitle">All songs you've downloaded, sorted by date. Re-add them to the queue if your USB is lost.</p>
+        </header>
+        <div class="backup-list" id="backup-list">
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <p>No songs downloaded yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings View -->
+      <section class="view" id="view-settings">
+        <header class="view-header">
+          <h1>Settings</h1>
+        </header>
+        <div class="settings-body">
+          <div class="settings-section">
+            <h2>Appearance</h2>
+            <label class="setting-row">
+              <span>Theme</span>
+              <div class="toggle-group">
+                <button class="toggle-btn active" data-theme-btn="dark">Dark</button>
+                <button class="toggle-btn" data-theme-btn="light">Light</button>
+              </div>
+            </label>
+          </div>
+
+          <div class="settings-section">
+            <h2>yt-dlp</h2>
+            <div class="setting-row">
+              <div>
+                <!-- Fix #3: shows version or "not installed" on load -->
+                <div>Version: <code id="ytdlp-version">checking…</code></div>
+                <div class="hint">yt-dlp must be updated regularly to keep working with YouTube.<br>
+                  If not installed, clicking Update will download it automatically.</div>
+              </div>
+              <button class="btn btn-primary" id="update-ytdlp-btn">Update yt-dlp</button>
+            </div>
+            <div id="update-result" class="update-result" style="display:none"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="views://mainview/index.js"></script>
+</body>
+</html>

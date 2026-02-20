@@ -1,0 +1,661 @@
+/* ============================================================
+   USB Music Manager — Design System
+   ============================================================ */
+
+/* ---------- CSS Variables (dark default) ---------- */
+:root {
+	--bg:          #111318;
+	--surface:     #1c1f28;
+	--surface-2:   #252934;
+	--surface-3:   #2f3345;
+	--border:      rgba(255,255,255,0.07);
+	--text:        #e8eaf0;
+	--text-muted:  #8890a6;
+	--accent:      #6c8fff;
+	--accent-dim:  rgba(108,143,255,0.15);
+	--danger:      #ff5f6d;
+	--danger-dim:  rgba(255,95,109,0.15);
+	--success:     #4ccd8f;
+	--warning:     #f0a843;
+	--radius:      10px;
+	--radius-sm:   6px;
+	--shadow:      0 4px 24px rgba(0,0,0,0.4);
+	--sidebar-w:   210px;
+	--transition:  180ms ease;
+  }
+  
+  [data-theme="light"] {
+	--bg:          #f0f2f7;
+	--surface:     #ffffff;
+	--surface-2:   #f5f7fc;
+	--surface-3:   #eaecf5;
+	--border:      rgba(0,0,0,0.08);
+	--text:        #1a1d26;
+	--text-muted:  #6b7292;
+	--accent:      #4a6eff;
+	--accent-dim:  rgba(74,110,255,0.10);
+	--danger:      #e53e4a;
+	--danger-dim:  rgba(229,62,74,0.10);
+	--success:     #28a870;
+	--warning:     #d48b0f;
+	--shadow:      0 2px 16px rgba(0,0,0,0.10);
+  }
+  
+  /* ---------- Reset & Base ---------- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	background: var(--bg);
+	color: var(--text);
+	font-size: 13.5px;
+	line-height: 1.5;
+	height: 100vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	-webkit-font-smoothing: antialiased;
+  }
+  
+  /* ---------- Fix #9: App update banner at top of page ---------- */
+  .update-banner {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 20px;
+	background: linear-gradient(90deg, rgba(108,143,255,0.18), rgba(108,143,255,0.08));
+	border-bottom: 1px solid var(--accent);
+	color: var(--text);
+	font-size: 13px;
+	flex-shrink: 0;
+	z-index: 100;
+  }
+  .update-banner span { flex: 1; }
+  
+  /* ---------- App Shell ---------- */
+  #app {
+	display: flex;
+	flex: 1;
+	min-height: 0;  /* Fix #5: allow flex children to shrink below content size */
+  }
+  
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+	width: var(--sidebar-w);
+	min-width: var(--sidebar-w);
+	background: var(--surface);
+	border-right: 1px solid var(--border);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+  }
+  
+  .sidebar-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 18px 16px 12px;
+	font-weight: 700;
+	font-size: 15px;
+	letter-spacing: -0.2px;
+  }
+  .app-icon { font-size: 20px; }
+  .app-name  { color: var(--text); }
+  
+  /* ---------- Navigation ---------- */
+  .nav-list {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 0 8px;
+  }
+  
+  .nav-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 13.5px;
+	width: 100%;
+	text-align: left;
+	transition: background var(--transition), color var(--transition);
+	position: relative;
+  }
+  .nav-item:hover  { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  
+  .badge {
+	margin-left: auto;
+	background: var(--accent);
+	color: #fff;
+	font-size: 10px;
+	font-weight: 700;
+	border-radius: 999px;
+	padding: 1px 6px;
+	min-width: 18px;
+	text-align: center;
+  }
+  
+  /* ---------- USB Status Bar ---------- */
+  .usb-status-bar {
+	padding: 12px 14px;
+	border-top: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+  }
+  
+  .usb-indicator {
+	width: 8px; height: 8px;
+	border-radius: 50%;
+	background: var(--text-muted);
+	flex-shrink: 0;
+	transition: background var(--transition);
+  }
+  .usb-indicator.connected    { background: var(--success); box-shadow: 0 0 6px var(--success); }
+  .usb-indicator.disconnected { background: var(--danger); }
+  
+  .usb-info {
+	font-size: 11.5px;
+	color: var(--text-muted);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+  }
+  
+  /* ---------- Content Area ---------- */
+  .content {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	display: grid;
+	grid-template-rows: 1fr;
+  }
+  
+  /* ---------- Views ---------- */
+  .view {
+	display: none;
+	flex-direction: column;
+	overflow: hidden;  /* clip, but children handle their own scroll */
+  }
+  .view.active { display: flex; }
+  
+  .view-header {
+	padding: 20px 24px 16px;
+	border-bottom: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	flex-shrink: 0;   /* header never shrinks */
+  }
+  .view-header h1 {
+	font-size: 18px;
+	font-weight: 700;
+	letter-spacing: -0.3px;
+  }
+  .view-subtitle {
+	font-size: 12.5px;
+	color: var(--text-muted);
+	flex-basis: 100%;
+	margin-top: 4px;
+  }
+  
+  /* ---------- USB Space Card ---------- */
+  .usb-space-card {
+	margin-left: auto;
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 8px 14px;
+	min-width: 200px;
+  }
+  
+  .space-bar-wrap {
+	background: var(--surface-3);
+	border-radius: 999px;
+	height: 5px;
+	overflow: hidden;
+	margin-bottom: 4px;
+  }
+  .space-bar {
+	height: 100%;
+	background: var(--accent);
+	border-radius: 999px;
+	transition: width 0.4s ease;
+  }
+  .space-bar.full { background: var(--danger); }
+  
+  .space-labels {
+	display: flex;
+	justify-content: space-between;
+	font-size: 11px;
+	color: var(--text-muted);
+  }
+  
+  /* ---------- Song List (Library) ---------- */
+  /* Fix #5: min-height:0 is essential so overflow-y:auto actually works in flex */
+  .song-list {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 8px;
+  }
+  
+  .song-card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border-radius: var(--radius-sm);
+	transition: background var(--transition);
+	border-bottom: 1px solid var(--border);
+  }
+  .song-card:hover { background: var(--surface-2); }
+  
+  .song-icon { font-size: 22px; flex-shrink: 0; }
+  
+  .song-info { flex: 1; overflow: hidden; }
+  .song-title {
+	font-size: 13.5px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+  }
+  .song-meta {
+	font-size: 11.5px;
+	color: var(--text-muted);
+	margin-top: 1px;
+  }
+  
+  .song-actions { display: flex; gap: 6px; }
+  
+  /* Playing animation */
+  .song-card.playing .song-icon { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse {
+	0%, 100% { transform: scale(1); opacity: 1; }
+	50%       { transform: scale(1.25); opacity: 0.7; }
+  }
+  
+  /* ---------- Fix #6: Playback Bar ----------
+	 - flex-shrink: 0 so it never gets squished
+	 - Use style.display='flex'/'none' in JS (not hidden attr) for reliable layout
+  */
+  .playback-bar {
+	display: flex;           /* overridden by JS to 'none' when hidden */
+	align-items: center;
+	gap: 12px;
+	padding: 10px 16px;
+	background: var(--surface);
+	border-top: 1px solid var(--border);
+	flex-shrink: 0;          /* never shrink — always full height */
+  }
+  .playback-bar audio { flex: 1; height: 32px; }
+  .now-playing {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	max-width: 240px;
+  }
+  .now-playing-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  #now-playing-title, #preview-title {
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+  }
+  
+  /* ---------- Search Form ---------- */
+  .search-form { margin-left: auto; display: flex; gap: 8px; }
+  .search-input {
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 7px 14px;
+	color: var(--text);
+	font-size: 13.5px;
+	width: 280px;
+	outline: none;
+	transition: border var(--transition);
+  }
+  .search-input:focus { border-color: var(--accent); }
+  
+  /* ---------- Fix #8: Search history ---------- */
+  .search-history {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	background: var(--surface);
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
+	flex-wrap: wrap;
+  }
+  .search-history-label {
+	font-size: 11.5px;
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+  }
+  .search-history-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .history-chip {
+	padding: 3px 10px;
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	font-size: 12px;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all var(--transition);
+  }
+  .history-chip:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+  
+  /* ---------- Search Results ---------- */
+  .search-results {
+	flex: 1;
+	min-height: 0;   /* Fix #5 */
+	overflow-y: auto;
+	padding: 8px;
+  }
+  
+  .result-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: var(--radius-sm);
+	transition: background var(--transition);
+	border-bottom: 1px solid var(--border);
+  }
+  .result-card:hover { background: var(--surface-2); }
+  
+  .result-thumb {
+	width: 60px;
+	height: 38px;
+	border-radius: 4px;
+	object-fit: cover;
+	flex-shrink: 0;
+	background: var(--surface-3);
+  }
+  
+  .result-info { flex: 1; overflow: hidden; }
+  .result-title {
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+  }
+  .result-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  
+  .result-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  
+  /* ---------- Queue ---------- */
+  .queue-list {
+	flex: 1;
+	min-height: 0;   /* Fix #5 */
+	overflow-y: auto;
+	padding: 8px;
+  }
+  
+  .queue-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: var(--radius-sm);
+	border-bottom: 1px solid var(--border);
+	transition: background var(--transition);
+  }
+  .queue-item:hover { background: var(--surface-2); }
+  
+  .queue-thumb {
+	width: 48px;
+	height: 30px;
+	border-radius: 4px;
+	object-fit: cover;
+	background: var(--surface-3);
+	flex-shrink: 0;
+  }
+  
+  .queue-body { flex: 1; min-width: 0; }
+  .queue-title {
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+  }
+  .queue-status { font-size: 11.5px; margin-top: 3px; }
+  .queue-status.pending    { color: var(--text-muted); }
+  .queue-status.downloading{ color: var(--accent); }
+  .queue-status.complete   { color: var(--success); }
+  .queue-status.error      { color: var(--danger); }
+  .queue-status.cancelled  { color: var(--text-muted); text-decoration: line-through; }
+  
+  .progress-bar-wrap {
+	background: var(--surface-3);
+	border-radius: 999px;
+	height: 3px;
+	margin-top: 4px;
+	overflow: hidden;
+  }
+  .progress-bar {
+	height: 100%;
+	background: var(--accent);
+	border-radius: 999px;
+	transition: width 0.3s ease;
+  }
+  
+  .queue-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  
+  /* Download spinner (CSS-only) */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+	display: inline-block;
+	width: 12px; height: 12px;
+	border: 2px solid var(--accent-dim);
+	border-top-color: var(--accent);
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	vertical-align: middle;
+	margin-right: 4px;
+  }
+  
+  /* ---------- Backup ---------- */
+  .backup-list {
+	flex: 1;
+	min-height: 0;   /* Fix #5 */
+	overflow-y: auto;
+	padding: 8px;
+  }
+  
+  .backup-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border-radius: var(--radius-sm);
+	border-bottom: 1px solid var(--border);
+  }
+  .backup-item:hover { background: var(--surface-2); }
+  
+  .backup-info { flex: 1; overflow: hidden; }
+  .backup-title {
+	font-size: 13px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+  }
+  .backup-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .backup-url {
+	font-size: 11px;
+	color: var(--accent);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 300px;
+  }
+  
+  /* ---------- Settings ---------- */
+  .settings-body {
+	flex: 1;
+	min-height: 0;   /* Fix #5 */
+	overflow-y: auto;
+	padding: 20px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+  }
+  
+  .settings-section h2 {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	color: var(--text-muted);
+	margin-bottom: 14px;
+  }
+  
+  .setting-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 12px 16px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+  }
+  
+  .hint { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.6; }
+  
+  .toggle-group { display: flex; gap: 4px; }
+  .toggle-btn {
+	padding: 5px 14px;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border);
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 13px;
+	transition: all var(--transition);
+  }
+  .toggle-btn:hover  { background: var(--surface-2); color: var(--text); }
+  .toggle-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  
+  .update-result {
+	margin-top: 10px;
+	padding: 10px 16px;
+	border-radius: var(--radius-sm);
+	font-size: 13px;
+  }
+  .update-result.success { background: rgba(76,205,143,0.12); color: var(--success); }
+  .update-result.error   { background: var(--danger-dim); color: var(--danger); }
+  
+  /* ---------- Buttons ---------- */
+  .btn {
+	padding: 7px 16px;
+	border-radius: var(--radius-sm);
+	border: none;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	transition: all var(--transition);
+  }
+  .btn-sm { padding: 4px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+  
+  .btn-ghost {
+	background: var(--surface-2);
+	color: var(--text);
+	border: 1px solid var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-3); }
+  
+  .btn-danger {
+	background: var(--danger-dim);
+	color: var(--danger);
+	border: 1px solid var(--border);
+  }
+  .btn-danger:hover:not(:disabled) { background: var(--danger); color: #fff; }
+  
+  .btn-icon {
+	width: 32px; height: 32px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	transition: all var(--transition);
+	flex-shrink: 0;
+  }
+  .btn-icon:hover { background: var(--surface-3); color: var(--text); }
+  .btn-icon.btn-danger { color: var(--danger); }
+  .btn-icon.btn-danger:hover { background: var(--danger); color: #fff; }
+  
+  /* ---------- Empty State ---------- */
+  .empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	color: var(--text-muted);
+	gap: 12px;
+  }
+  .empty-icon { font-size: 40px; }
+  .empty-state p { font-size: 13.5px; text-align: center; }
+  
+  /* ---------- Warning Banner ---------- */
+  .warning-banner {
+	width: 100%;
+	padding: 8px 14px;
+	background: rgba(240,168,67,0.12);
+	border: 1px solid rgba(240,168,67,0.3);
+	border-radius: var(--radius-sm);
+	color: var(--warning);
+	font-size: 12.5px;
+  }
+  
+  /* ---------- Scrollbars ---------- */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  
+  /* ---------- Utility ---------- */
+  code {
+	font-family: 'SF Mono', 'Consolas', monospace;
+	font-size: 12px;
+	background: var(--surface-3);
+	padding: 2px 6px;
+	border-radius: 4px;
+  }
+  
+  .loading-state {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px;
+	color: var(--text-muted);
+	gap: 10px;
+  }
+  
