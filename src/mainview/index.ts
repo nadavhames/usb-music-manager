@@ -26,7 +26,7 @@ import type {
 // ============================================================
 
 const rpc = Electroview.defineRPC<AppRPC>({
-  maxRequestTime: 6000,
+  maxRequestTime: 60000,
   handlers: {
     requests: {},
     messages: {
