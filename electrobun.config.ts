@@ -4,7 +4,7 @@ export default {
 	app: {
 		name: "usb-music-manager",
 		identifier: "usbmusicmanager.electrobun.dev",
-		version: "0.0.1",
+		version: "0.0.2",
 	},
 	build: {
 		views: {
